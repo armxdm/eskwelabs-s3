@@ -21,11 +21,12 @@ choice = st.selectbox(
 if st.button("Submit", type="primary"):
     track = recommender_pool_df.loc[recommender_pool_df['track_names_with_artist'] == choice]
     predicted_genre = track['predicted_genre'].values[0]
-    recommended_tracks = recommender_pool_df[(recommender_pool_df['predicted_genre'] == predicted_genre) & (recommender_pool_df['track_names_with_artist'] != choice)].sort_values('predicted_genre_proba', ascending=False)
-    
+    recommended_tracks = recommender_pool_df[(recommender_pool_df['predicted_genre'] == predicted_genre) & (recommender_pool_df['track_names_with_artist'] != choice) & (recommender_pool_df['predicted_genre_proba'] >= 0.5)].sort_values('predicted_genre_proba', ascending=False)
+    recommended_tracks_sample = recommended_tracks.sample(n=10)
+
     st.divider()
     st.markdown("<h5>Predicted Genre: </h5>", unsafe_allow_html = True)
     st.info(predicted_genre.upper())
-    st.markdown("<br><h5>Top 10 Similar Songs: </h5>", unsafe_allow_html = True)
-    for track in recommended_tracks['track_names_with_artist'][:10]:
+    st.markdown("<br><h5>Similar Songs: </h5>", unsafe_allow_html = True)
+    for track in recommended_tracks_sample['track_names_with_artist'][:10]:
     	st.info("\t🎵 " + track)
