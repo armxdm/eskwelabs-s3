@@ -25,7 +25,7 @@ if st.button("Submit", type="primary"):
     seed_track = recommender_pool_df.loc[recommender_pool_df['track_names_with_artist'] == choice].iloc[0]
     recommender_pool_df['euclidean_dist_features'] = recommender_pool_df.apply(lambda x: get_euclidean_dist(x[feature_cols],seed_track[feature_cols]), axis=1)
     predicted_genre = seed_track['predicted_genre']
-    recommended_tracks = recommender_pool_df[(recommender_pool_df['predicted_genre'] == predicted_genre) & (recommender_pool_df['track_names_with_artist'] != choice)].sort_values('euclidean_dist_features')
+    recommended_tracks = recommender_pool_df[(recommender_pool_df['predicted_genre'] == predicted_genre) & (recommender_pool_df['track_names_with_artist'] != choice)].sort_values('euclidean_dist_features').reset_index()
 
     st.divider()
     st.markdown("<h5>Predicted Genre: </h5>", unsafe_allow_html = True)
@@ -36,6 +36,6 @@ if st.button("Submit", type="primary"):
     min_euclidean = recommended_tracks['euclidean_dist_features'].min()
     recommended_tracks['euclidean_scaled'] =  (1 - (recommended_tracks['euclidean_dist_features'] - min_euclidean) / (max_euclidean - min_euclidean)).abs()
 
-    for i, track in recommended_tracks.iterrows():
+    for i, track in recommended_tracks[:50].iterrows():
     	#st.info("\t🎵 " + track['track_names_with_artist'])
-    	st.progress(value = track['euclidean_scaled'], text= "\t🎵 " + track['track_names_with_artist'])
+    	st.progress(value = track['euclidean_scaled'], text= "\t🎵 " + str(i+1) + ". " + track['track_names_with_artist'])
