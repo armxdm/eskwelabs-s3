@@ -1,6 +1,6 @@
 import pandas as pd
 import streamlit as st
-from sklearn.metrics.pairwise import euclidean_distances
+from sklearn.metrics.pairwise import cosine_similarity
 
 recommender_pool_df = pd.read_csv('spotify_s3g3_rec_pool.csv')
 recommender_pool_df = recommender_pool_df.sort_values('track_name')
@@ -17,25 +17,25 @@ st.divider()
 choice = st.selectbox(
     "Select Seed Track: ", options = options)
 
-def get_euclidean_dist(x,y):
-	euclidean_dist =  euclidean_distances(x.values.reshape(1, -1), y.values.reshape(1, -1)).flatten()[0]
-	return euclidean_dist
+def get_cosine_dist(x,y):
+    cosine_dist = 1 - cosine_similarity(x.values.reshape(1, -1), y.values.reshape(1, -1)).flatten()[0]
+    return cosine_dist
 
 if st.button("Submit", type="primary"):
     seed_track = recommender_pool_df.loc[recommender_pool_df['track_names_with_artist'] == choice].iloc[0]
-    recommender_pool_df['euclidean_dist_features'] = recommender_pool_df.apply(lambda x: get_euclidean_dist(x[feature_cols],seed_track[feature_cols]), axis=1)
+    recommender_pool_df['cosine_similarity_features'] = recommender_pool_df.apply(lambda x: get_cosine_dist(x[feature_cols],seed_track[feature_cols]), axis=1)
     predicted_genre = seed_track['predicted_genre']
-    recommended_tracks = recommender_pool_df[(recommender_pool_df['predicted_genre'] == predicted_genre) & (recommender_pool_df['track_names_with_artist'] != choice)].sort_values('euclidean_dist_features').reset_index()
+    recommended_tracks = recommender_pool_df[(recommender_pool_df['predicted_genre'] == predicted_genre) & (recommender_pool_df['track_names_with_artist'] != choice)].sort_values('cosine_similarity_features').reset_index()
 
     st.divider()
     st.markdown("<h5>Predicted Genre: </h5>", unsafe_allow_html = True)
     st.info(predicted_genre.upper())
     st.markdown("<br><h5>Similar Songs: </h5>", unsafe_allow_html = True)
 
-    max_euclidean = recommended_tracks['euclidean_dist_features'].max() 
-    min_euclidean = recommended_tracks['euclidean_dist_features'].min()
-    recommended_tracks['euclidean_scaled'] =  (1 - (recommended_tracks['euclidean_dist_features'] - min_euclidean) / (max_euclidean - min_euclidean)).abs()
+    max_euclidean = recommended_tracks['cosine_similarity_features'].max() 
+    min_euclidean = recommended_tracks['cosine_similarity_features'].min()
+    recommended_tracks['cosine_similarity_features_scaled'] =  (1 - (recommended_tracks['cosine_similarity_features'] - min_euclidean) / (max_euclidean - min_euclidean)).abs()
 
     for i, track in recommended_tracks[:50].iterrows():
     	#st.info("\t🎵 " + track['track_names_with_artist'])
-    	st.progress(value = track['euclidean_scaled'], text= "\t🎵 " + str(i+1) + ". " + track['track_names_with_artist'])
+    	st.progress(value = track['cosine_similarity_features_scaled'], text= "\t🎵 " + str(i+1) + ". " + track['track_names_with_artist'])
